@@ -13,6 +13,7 @@ use Cwd qw(getcwd);
 use Module::Load;
 
 use File::Path;
+use File::Temp qw(tempdir);
 
 our $this_app;
 *this_app = \$main::this_app;
@@ -21,7 +22,16 @@ my $ec = LC::Exception::Context->new->will_store_all;
 
 use Readonly;
 Readonly my $COMPONENTS_PROFILE_PATH => '/software/components';
-Readonly my $RUN_FROM => '/tmp';
+my $RUN_FROM;
+
+if ($this_app->option('chroot')) {
+    my $chroot = $this_app->option('chroot');
+    $RUN_FROM = tempdir("$chroot/tmp/ncd-components-XXXXXXXX", CLEANUP => 1);
+    $RUN_FROM =~ s#$chroot##;
+}
+else {
+    $RUN_FROM = tempdir("/tmp/ncd-components-XXXXXXXX", CLEANUP => 1);
+}
 
 Readonly my $COMPONENT_BASE => "/usr/lib/perl/NCM/Component";
 # Methods called during _execute
